@@ -8,8 +8,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
+
+var port = os.Getenv("PORT")
 
 type deleteResponse struct {
 	Id      string `json:"id"`
@@ -202,7 +205,7 @@ func StartServer() {
 	router.HandleFunc("/orders/{id}", deleteOrder).Methods("DELETE")
 	router.HandleFunc("/orders/{id}", updateOrder).Methods("PUT")
 
-	err := http.ListenAndServe(":8080", router)
+	err := http.ListenAndServe(":" + port, router)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}

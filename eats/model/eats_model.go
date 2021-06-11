@@ -88,10 +88,8 @@ func init() {
 	dsn := os.Getenv("DB_USER") +
 		":" +
 		os.Getenv("DB_PWD") +
-		"@tcp(" +
-		os.Getenv("DB_HOST") +
-		":" +
-		os.Getenv("DB_PORT") +
+		"@unix(" +
+		os.Getenv("DB_CONNECTION") +
 		")/handson?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
