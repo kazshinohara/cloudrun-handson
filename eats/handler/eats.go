@@ -14,9 +14,26 @@ import (
 
 var port = os.Getenv("PORT")
 
+type rootResponse struct {
+	Version string `json:"version"` // v1, v2, v3...
+	Message string `json:"message"`
+}
+
 type deleteResponse struct {
 	Id      string `json:"id"`
 	Message string `json:"message"`
+}
+
+func fetchRootResponse(w http.ResponseWriter, r *http.Request) {
+	responseBody, err := json.Marshal(&rootResponse{Version: "v1", Message: "This is Eats service API"})
+	if err != nil {
+		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.Write(responseBody)
 }
 
 func fetchAllOrders(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +43,8 @@ func fetchAllOrders(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(orders)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
@@ -42,6 +61,8 @@ func fetchOrder(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(order)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -54,12 +75,16 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	var order model.Order
 	if err := json.Unmarshal(requestBody, &order); err != nil {
 		log.Printf("could not json.Unmarshal: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	model.InsertOrder(&order)
 
 	responseBody, err := json.Marshal(order)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -78,6 +103,8 @@ func updateOrder(w http.ResponseWriter, r *http.Request) {
 	var order model.Order
 	if err := json.Unmarshal(requestBody, &order); err != nil {
 		log.Printf("could not json.Unmarshal: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	model.UpdateOrder(&order, id)
 	convertUintId, _ := strconv.ParseInt(id, 10, 64)
@@ -86,6 +113,8 @@ func updateOrder(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(order)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -103,6 +132,8 @@ func deleteOrder(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(deleteResponse{Id: id, Message: "deleted"})
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -115,6 +146,8 @@ func fetchAllItems(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(items)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
@@ -130,6 +163,8 @@ func fetchItem(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(item)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(responseBody)
@@ -140,15 +175,19 @@ func createItem(w http.ResponseWriter, r *http.Request) {
 	var item model.Item
 	if err := json.Unmarshal(requestBody, &item); err != nil {
 		log.Printf("could not json.Unmarshal: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	model.InsertItem(&item)
 
 	responseBody, err := json.Marshal(item)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(responseBody)
 }
@@ -160,6 +199,8 @@ func updateItem(w http.ResponseWriter, r *http.Request) {
 	var item model.Item
 	if err := json.Unmarshal(requestBody, &item); err != nil {
 		log.Printf("could not json.Unmarshal: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	model.UpdateItem(&item, id)
 
@@ -168,6 +209,8 @@ func updateItem(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(item)
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -182,6 +225,8 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(deleteResponse{Id: id, Message: "deleted"})
 	if err != nil {
 		log.Printf("could not json.Marshal: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -190,6 +235,8 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 
 func StartServer() {
 	router := mux.NewRouter().StrictSlash(true)
+
+	router.HandleFunc("/", fetchRootResponse).Methods("GET")
 
 	router.HandleFunc("/items", fetchAllItems).Methods("GET")
 	router.HandleFunc("/items/{id}", fetchItem).Methods("GET")
