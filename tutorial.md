@@ -257,7 +257,7 @@ cd ~/cloudshell_open/cloudrun-handson/ && teachme tutorial.md
 ## Cloud SQL インスタンスの新規作成
 
 ### CLoud SQL の インスタンス (MySQL) を作成します。
-今回作成するインスタンスの名前は **handson-db** です。リージョンは **asia-norhtasta1(東京)** を選択します。
+今回作成するインスタンスの名前は **handson-db** です。リージョンは **asia-northeast1(東京)** を選択します。
 
 ```bash
 gcloud sql instances create {{db-instance-name}} --tier=db-custom-1-3840 --region={{region}}
@@ -299,6 +299,9 @@ SHOW TABLES;
 Eats サービスではピザのメニュー情報がマスターデータとして予めデータベースに登録されている必要がありますが、
 Eats サービスのアプリケーションに実装済みのマイグレーションツールにより、
 アプリケーションの初回立ち上げ時に自動的にピザのメニュー情報が本 **handson** データベースに登録されます。
+```sql
+QUIT;
+```
 
 ### コネクション名を確認します。
 コネクション名は Cloud Run 上にデプロイしたアプリケーションから Cloud SQL のインスタンスに接続するため、このあとのステップで必要となります。
@@ -361,12 +364,12 @@ export DB_USER=root
 export DB_PWD=[先程設定したパスワード]
 ```
 Cloud Run から接続する Cloud SQL インスタンスを識別するための設定
-```text
-export DB_INSTANCE=`gcloud sql instances describe handson-db --format json | jq -r .connectionName`
+```bash
+export DB_INSTANCE=$(gcloud sql instances describe handson-db --format json | jq -r .connectionName)
 ```
 前のものとほぼ同じ内容ですが、こちらは Eats サービスのアプリケーション自体から Cloud SQL に接続するために必要です。
 ```bash
-export DB_CONNECTION="/cloudsql/"`gcloud sql instances describe handson-db --format json | jq -r .connectionName`
+export DB_CONNECTION="/cloudsql/"$(gcloud sql instances describe handson-db --format json | jq -r .connectionName)
 ```
 
 ### Cloud Run に デプロイ
@@ -469,7 +472,7 @@ curl -X POST -d '{"purchaser":"Taro Yamada","item_id":1}' ${EATS_URL}/orders
 }
 ```
 #### 注文の更新 (UPDATE)
-先程作成した注文の更新を行いましょう。例えばピザの調理が完了したことを示す、`item_comleted` を `false` から `true` に変更してみます。
+先程作成した注文の更新を行いましょう。例えばピザの調理が完了したことを示す、`item_completed` を `false` から `true` に変更してみます。
 更新は PUT メソッドを使うので注意してください。また URL の末尾で、先程作成した注文の ID を指定します。
 ```bash
 curl -X PUT -d '{"purchaser":"Taro Yamada","item_id":1,"item_completed":true}' ${EATS_URL}/orders/1
@@ -501,7 +504,7 @@ curl -X DELETE ${EATS_URL}/orders/1
 ```
 
 ### Cloud Run のオートスケール機能を試してみる
-Cloud Run は協力なオートスケール機能を備えています。
+Cloud Run は強力なオートスケール機能を備えています。
 ここでは Eats サービスが盛況を迎えたことを妄想しながら、Eats サービスに負荷を掛けたときにどのような挙動になるのか見てみましょう。
 
 #### 現在の コンテナ インスタンス数の確認
@@ -617,7 +620,7 @@ Eats サービス v2 (先程変更したもの) を Cloud Build でビルドし�
 cd ./eats && gcloud builds submit --tag {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/eats:v2
 ```
 
-[Cloud Console](https://console.cloud.google.com/cloud-build/builds?project={{project-id}}) ) にアクセスし、Cloud Build が動作していることを確認します。
+[Cloud Console](https://console.cloud.google.com/cloud-build/builds?project={{project-id}}) にアクセスし、Cloud Build が動作していることを確認します。
 
 同様に Notification Server も Cloud Build でビルドを行います。
 ```bash
