@@ -276,7 +276,7 @@ gcloud sql instances list
 ### 作成したインスタンスにログインするため、root ユーザーのパスワードを設定します。
 ```bash
 gcloud sql users set-password root \
---host=% \
+--host="%" \
 --instance={{db-instance-name}} \
 --prompt-for-password
 ```
