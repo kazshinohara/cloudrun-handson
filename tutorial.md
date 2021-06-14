@@ -273,7 +273,7 @@ gcloud sql instances list
 ```
 
 ### 作成したインスタンスにログインするため、root ユーザーのパスワードを設定します。
-```bash
+```text
 gcloud sql users set-password root \
 --host="%" \
 --instance={{db-instance-name}} \
@@ -360,11 +360,11 @@ Eats サービスを動かすため、アプリケーションにいくつか環
 ```bash
 export DB_USER=root
 ```
-```bash
+```text
 export DB_PWD=[先程設定したパスワード]
 ```
 Cloud Run から接続する Cloud SQL インスタンスを識別するための設定
-```bash
+```text
 export DB_INSTANCE=`gcloud sql instances describe handson-db --format json | jq -r .connectionName`
 ```
 前のものとほぼ同じ内容ですが、こちらは Eats サービスのアプリケーション自体から Cloud SQL に接続するために必要です。
