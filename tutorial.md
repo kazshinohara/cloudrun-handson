@@ -254,7 +254,6 @@ cd ~/cloudshell_open/cloudrun-handson
 
 ```bash
 EATS_URL=$(gcloud run services describe --format=json --region=asia-northeast1 --platform=managed eats | jq .status.url -r)
-echo ${URL}
 ```
 
 <!-- Step 10 -->
@@ -672,7 +671,7 @@ gcloud run deploy eats \
 --allow-unauthenticated \
 --set-env-vars=DB_PWD=${DB_PWD},DB_USER=${DB_USER},DB_CONNECTION=${DB_CONNECTION},PROJECT_ID=${PROJECT_ID},TOPIC_ID=${TOPIC_ID} \
 --set-cloudsql-instances=${DB_INSTANCE} \
---service-account="serviceAccount:handson-sa@{{project-id}}.iam.gserviceaccount.com"
+--service-account="handson-sa@{{project-id}}.iam.gserviceaccount.com"
 ```
 
 ルートパスにアクセスし、Eats サービスが v2 に更新されたことを確認します。
@@ -700,8 +699,8 @@ gcloud beta run deploy notification-server \
 --allow-unauthenticated \
 --use-http2 \
 --timeout=3600 \
---set-env-vars=PROJECT_ID=${PROJECT_ID},SUB_ID=${SUB_ID}
---service-account="serviceAccount:handson-sa@{{project-id}}.iam.gserviceaccount.com"
+--set-env-vars=PROJECT_ID=${PROJECT_ID},SUB_ID=${SUB_ID} \
+--service-account="handson-sa@{{project-id}}.iam.gserviceaccount.com"
 ```
 
 ### Notification Client の実行
@@ -722,22 +721,21 @@ docker run --name notification-client -e INSECURE=false -e DOMAIN=${NOTIFICATION
 <!-- Step 20 -->
 ## 動作確認 1 通知が実際に飛ぶことの確認
 ### 注文作成(受付)の通知
-注文を作成してみましょ。Cloud Shell の別タブを開いて  
-新たなタブを開く場合は、Cloud Shell 上段の **+** ボタンのプルダウンからプロジェクト ID を選択して開いてください。
+注文を作成してみましょう。
+新たなタブを開く場合は、Cloud Shell 上段の **+** ボタンのプルダウンからプロジェクト ID を選択して開いてください。  
 新しく開いたタブの gcloud コマンドにはプロジェクト ID が設定されておらず、以降のコマンド実行が上手くいかない場合があるので、その場合は以下コマンドを実行してください。
 ```bash
 gcloud config set core/project {{project-id}}
 ```
 
-また新しいタブではこれまで設定した環境変数及び gcloud の設定されていないため、以降のステップで必要なものを新しいタブでも設定します。
-```bash
-export EATS_URL=$(gcloud run services describe eats --format json | jq -r '.status.address.url')
-```
+また新しいタブではこれまで設定した gcloud の設定や環境変数が設定されていないため、以降のステップで必要なものを新しいタブでも設定します。
 ```bash
 gcloud config set run/region {{region}}
 gcloud config set run/platform managed
 ```
-
+```bash
+export EATS_URL=$(gcloud run services describe eats --format json | jq -r '.status.address.url')
+```
 それでは、通知を発生させるため注文作成を行っていきましょう。以下のコマンドを5, 6回実行してみてください。  
 尚、ここで複数回実行しているのはタイムラグがあるため、複数回同時に注文作成したほうが早く結果を確認できるためです。  
 `purchaser` と `item_id` はお好きなものを選択してください。
@@ -761,7 +759,7 @@ Notification Client を実行中のタブに戻って、通知が届いている
 末尾のオーダー ID は各自の環境のお好きなものを使ってみてください。
 更新内容も API のスキーマに沿っていれば以下のものでなくて構いません。
 ```bash
-curl -X PUT -d '{"item_id":3}' ${EATS_URL}/orders/2
+curl -X PUT -d '{"item_completed":true}' ${EATS_URL}/orders/2
 ```
 Notification Client を実行中のタブに戻って、通知が届いていることを確認してください。
 次のように表示されていれば、OK です。

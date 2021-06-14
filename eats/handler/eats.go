@@ -121,7 +121,7 @@ func updateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseBody)
 
 	// TODO: only when item_completed_at or delivery_completed_at has been set
-	//util.Publish("Order received", order.Purchaser, order.ID, order.ItemID)
+	//util.Publish("Order updated", order.Purchaser, order.ID, order.ItemID)
 }
 
 func deleteOrder(w http.ResponseWriter, r *http.Request) {
