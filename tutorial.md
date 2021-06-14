@@ -210,6 +210,33 @@ gcloud projects add-iam-policy-binding {{project-id}} --member "serviceAccount:h
 **GUI**: [サービスアカウント](https://console.cloud.google.com/iam-admin/serviceaccounts?project={{project-id}})
 
 <!-- Step 8 -->
+## (Optional) Cloud Shell 復旧手順
+
+もしハンズオン中に Cloud Shell を閉じてしまったり、リロードしたり、チュートリアルを閉じてしまった場合、以下のコマンドを再実行してから作業を再開してください。  
+(Step 1 から順番に進めている場合はこのページはスキップいただいて結構です)
+
+- 環境変数 `PROJECT_ID` に Google Cloud プロジェクト ID を設定
+```bash
+export PROJECT_ID={{project-id}}
+```
+
+- CLI（gcloud コマンド） から利用する Google Cloud のデフォルトプロジェクトを設定
+```bash
+gcloud config set project $PROJECT_ID
+```
+
+- 作業用のディレクトリへ移動
+```bash
+cd ~/cloudshell_open/cloudrun-handson
+```
+
+- チュートリアルの起動
+```bash
+cd ~/cloudshell_open/cloudrun-handson/ && teachme tutorial.md
+```
+
+
+<!-- Step 9 -->
 ## Eats サービス (注文API) の構築
 
 <walkthrough-tutorial-duration duration=30></walkthrough-tutorial-duration>
@@ -224,37 +251,7 @@ gcloud projects add-iam-policy-binding {{project-id}} --member "serviceAccount:h
  - 動作確認
    - Eats サービスへの CRUD 
    - Cloud Run のオートスケール機能を確認
-    
-<!-- Step 9 -->
-## Cloud Shell 復旧手順
 
-もしハンズオン中に Cloud Shell を閉じてしまったり、リロードした場合、以下のコマンドを再実行してから作業を再開してください。(Step 1 から順番に進めている場合はこのページはスキップいただいて結構です)
-
-- 環境変数 `PROJECT_ID` に Google Cloud プロジェクト ID を設定
-
-```bash
-export PROJECT_ID="{{project-id}}"
-```
-
-- CLI（gcloud コマンド） から利用する Google Cloud のデフォルトプロジェクトを設定
-
-```bash
-gcloud config set project $PROJECT_ID
-```
-
-- 作業用のディレクトリへ移動
-
-```bash
-cd ~/cloudshell_open/cloudrun-handson
-```
-
-必要に応じて以下も実行してからお進みください。
-
-- Cloud Run にデプロイした Eats サービスの URL の取得
-
-```bash
-EATS_URL=$(gcloud run services describe --format=json --region=asia-northeast1 --platform=managed eats | jq .status.url -r)
-```
 
 <!-- Step 10 -->
 ## Cloud SQL インスタンスの新規作成
@@ -475,7 +472,7 @@ curl -X POST -d '{"purchaser":"Taro Yamada","item_id":1}' ${EATS_URL}/orders
 先程作成した注文の更新を行いましょう。例えばピザの調理が完了したことを示す、`item_comleted` を `false` から `true` に変更してみます。
 更新は PUT メソッドを使うので注意してください。また URL の末尾で、先程作成した注文の ID を指定します。
 ```bash
-curl -X PUT -d '{"item_completed":true}' ${EATS_URL}/orders/1
+curl -X PUT -d '{"purchaser":"Taro Yamada","item_id":1,"item_completed":true}' ${EATS_URL}/orders/1
 ```
 `item_completed` が `true` になって返ってくれば、OK です。
 ```terminal
@@ -759,7 +756,7 @@ Notification Client を実行中のタブに戻って、通知が届いている
 末尾のオーダー ID は各自の環境のお好きなものを使ってみてください。
 更新内容も API のスキーマに沿っていれば以下のものでなくて構いません。
 ```bash
-curl -X PUT -d '{"item_completed":true}' ${EATS_URL}/orders/2
+curl -X PUT -d '{"purchaser":"Taro Yamada","item_id":1,"item_completed":true}' ${EATS_URL}/orders/2
 ```
 Notification Client を実行中のタブに戻って、通知が届いていることを確認してください。
 次のように表示されていれば、OK です。
