@@ -253,7 +253,7 @@ cd ~/cloudshell_open/cloudrun-handson
 - Cloud Run にデプロイした Eats サービスの URL の取得
 
 ```bash
-URL=$(gcloud run services describe --format=json --region=asia-northeast1 --platform=managed eats | jq .status.url -r)
+EATS_URL=$(gcloud run services describe --format=json --region=asia-northeast1 --platform=managed eats | jq .status.url -r)
 echo ${URL}
 ```
 
@@ -394,6 +394,8 @@ eats サービスの URL は何度も使うので環境変数に設定してお�
 curl コマンドを使って Eats サービスのルートパスにまずはアクセスしてみてください。
 ```bash
 export EATS_URL=$(gcloud run services describe eats --format json | jq -r '.status.address.url')
+```
+```bash
 curl -X GET ${EATS_URL}/
 ```
 
@@ -549,10 +551,8 @@ hey -n 10000 -c 100 $EATS_URL
 
 ### スキーマの作成
 Cloud Pub/Sub では [Protocol Buffers](https://developers.google.com/protocol-buffers) もしくは [Avro](https://avro.apache.org/) を使ってメッセージのスキーマを定義することが可能です。
-スキーマ設定機能は 2021.06 現在、Preview 機能のため、beta のコマンドラインを使います。念の為アップデートしておきましょう。
-```bash
-gcloud beta components update
-```
+スキーマ設定機能は 2021.06 現在、Preview 機能となります。
+
 スキーマを作成します。
 イベント名 (e.g. 注文受付)、注文者名、注文 ID、アイテム ID を扱うスキーマです。
 ```bash
@@ -584,8 +584,12 @@ gcloud pubsub subscriptions create {{sub-id}} \
 <!-- Step 17 -->
 ## Eats サービスのコード修正 (v2)
 Notification サービスと連携できるように Eats サービスのソースコードを変更します。
-すでに実装は済んでいるので、コメントアウトされている箇所を戻していきます。
-レポジトリのルートから以下のコマンドを実行してください。
+すでに実装は済んでいるので、コメントアウトされている箇所を戻していきます。  
+
+レポジトリのルートに戻ります。
+```bash
+cd ~/cloudshell_open/cloudrun-handson
+```
 
 Cloud Pub/Sub と連携するための Util パッケージのインポート
 ```bash
@@ -599,7 +603,7 @@ sed -i -e "s|//util.Publish(\"Order received\", order.Purchaser, order.ID, order
 
 注文更新時に Cloud Pub/Sub にメッセージをパブリッシュ
 ```bash
-sed -i -e "s|//util.Publish(\"Order updated\", order.Purchaser, order.ID, order.ItemID)|util.Publish(\"Order received\", order.Purchaser, order.ID, order.ItemID)|g" eats/handler/eats.go
+sed -i -e "s|//util.Publish(\"Order updated\", order.Purchaser, order.ID, order.ItemID)|util.Publish(\"Order updated\", order.Purchaser, order.ID, order.ItemID)|g" eats/handler/eats.go
 ```
 
 最後に Eats サービスが更新されたことを示す意味で、ルートパスのメッセージも変更しておきましょう。
@@ -621,7 +625,7 @@ cd ./eats && gcloud builds submit --tag {{region}}-docker.pkg.dev/{{project-id}}
 
 同様に Notification Server も Cloud Build でビルドを行います。
 ```bash
-cd ../notification && docker build -t {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-server:v1 .
+cd ../notification && gcloud builds submit --tag {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-server:v1
 ```
 
 Eats サービス v2 と Notification Server のビルドが完了し、コンテナイメージが Artifact Registry にアップロードされたことを確認します。
@@ -641,12 +645,12 @@ gcloud container images list-tags {{region}}-docker.pkg.dev/{{project-id}}/{{rep
 
 Notification Client は Cloud Shell 上で実行するので、Artifact Registry にアップロードしなくてよいので、docker コマンドでビルドします。
 ```bash
-docker build -t {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-client:v1 .
+docker build -t {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-client:v1 -f Dockerfile.client .
 ```
 
 ビルドが無事終わっているかの確認します。
 ```bash
-docker images | grep notification-clients 
+docker images | grep notification-client
 ```
 
 <!-- Step 19 -->
@@ -657,6 +661,8 @@ PROJECT_ID はすでに設定済みですが、念の為再掲しておきます
 
 ```bash
 export PROJECT_ID={{project-id}}
+```
+```bash
 export TOPIC_ID={{topic-id}}
 ```
 Cloud Run へデプロイ
@@ -665,7 +671,8 @@ gcloud run deploy eats \
 --image={{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/eats:v2 \
 --allow-unauthenticated \
 --set-env-vars=DB_PWD=${DB_PWD},DB_USER=${DB_USER},DB_CONNECTION=${DB_CONNECTION},PROJECT_ID=${PROJECT_ID},TOPIC_ID=${TOPIC_ID} \
---set-cloudsql-instances=${DB_INSTANCE}
+--set-cloudsql-instances=${DB_INSTANCE} \
+--service-account="serviceAccount:handson-sa@{{project-id}}.iam.gserviceaccount.com"
 ```
 
 ルートパスにアクセスし、Eats サービスが v2 に更新されたことを確認します。
@@ -688,34 +695,51 @@ Cloud Run へデプロイ
 gRPC を使うため、**--use-http2** オプションを付けています。
 また、Notification サービスは gRPC の Server-side streaming を使った Long live connection となるため、Cloud Run のレスポンスタイムアウト値を 60 分 (3600 秒) に設定しておきます。
 ```bash
-gcloud run deploy notification-server \
+gcloud beta run deploy notification-server \
 --image={{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-server:v1 \
+--allow-unauthenticated \
 --use-http2 \
 --timeout=3600 \
 --set-env-vars=PROJECT_ID=${PROJECT_ID},SUB_ID=${SUB_ID}
+--service-account="serviceAccount:handson-sa@{{project-id}}.iam.gserviceaccount.com"
 ```
 
 ### Notification Client の実行
 Notification Server からの通知を受け取るため、Notification Client を Cloud Shell 上で実行します。  
 まず、Client の宛先となる Notification Server の URL を確認します。
 ```bash
-export NOTIFICATION_URL=$(gcloud run services describe notification-server --format json | jq -r '.status.address.url')
+export NOTIFICATION_DOMAIN=$(gcloud run services describe notification-server --format json | jq -r '.status.address.url' | sed 's|https://||g')
 ```
 
 Notification Client を実行します。実行後、Notification Server と Long live connection を確立し、Notification Server から通知が送信されるのを待ちます。 
 実行を中止せず、そのままにしておいてください。
 ```bash
-docker run --name notification-client -e INSECURE=false -e DOMAIN=${NOTIFICATION_URL} -e PORT=443 {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-client:v1
+docker run --name notification-client -e INSECURE=false -e DOMAIN=${NOTIFICATION_DOMAIN} -e PORT=443 {{region}}-docker.pkg.dev/{{project-id}}/{{repo-name}}/notification-client:v1
 ```
 <walkthrough-footnote>Notification サービスを構築し、Eats サービスを Notitication サービスと連携できるように修正し、Cloud Run へ再デプロイしました。
 次は Notification サービスの動作確認をしていきます。</walkthrough-footnote>
 
 <!-- Step 20 -->
 ## 動作確認 1 通知が実際に飛ぶことの確認
-
 ### 注文作成(受付)の通知
-注文を作成してみましょう。Cloud Shell の別タブを開いて以下のコマンドを5, 6回実行してみてください。  
-(ここで複数回実行しているのはタイムラグがあるため、複数回同時に注文作成したほうが早く結果を確認できるためです。)  
+注文を作成してみましょ。Cloud Shell の別タブを開いて  
+新たなタブを開く場合は、Cloud Shell 上段の **+** ボタンのプルダウンからプロジェクト ID を選択して開いてください。
+新しく開いたタブの gcloud コマンドにはプロジェクト ID が設定されておらず、以降のコマンド実行が上手くいかない場合があるので、その場合は以下コマンドを実行してください。
+```bash
+gcloud config set core/project {{project-id}}
+```
+
+また新しいタブではこれまで設定した環境変数及び gcloud の設定されていないため、以降のステップで必要なものを新しいタブでも設定します。
+```bash
+export EATS_URL=$(gcloud run services describe eats --format json | jq -r '.status.address.url')
+```
+```bash
+gcloud config set run/region {{region}}
+gcloud config set run/platform managed
+```
+
+それでは、通知を発生させるため注文作成を行っていきましょう。以下のコマンドを5, 6回実行してみてください。  
+尚、ここで複数回実行しているのはタイムラグがあるため、複数回同時に注文作成したほうが早く結果を確認できるためです。  
 `purchaser` と `item_id` はお好きなものを選択してください。
 ```bash
 curl -X POST -d '{"purchaser":"Taro Yamada","item_id":1}' ${EATS_URL}/orders
@@ -758,6 +782,8 @@ Cloud Run には実運用に使える様々な機能があります。ここで�
 こちらが、Cloud Run に初回にデプロイした Eats サービスを識別するリビジョンです。 
 ```bash
 OLD_REV=$(gcloud run revisions list --format json | jq -r '.[].metadata.name' | grep 'eats-' | sort -r | sed -n 2p)
+```
+```bash
 echo $OLD_REV
 ```
 では確認した 1 つ前のリビジョンにロールバックを行いましょう。100 % のリクエスト トライフィックを 1 つ前のリビジョンに流します。
@@ -779,11 +805,8 @@ curl -X GET ${EATS_URL}/
 
 早速試してみましょう。
 今、Eats サービスは v1 に 100% のリクエストトラフィックを流しています。こちらを v1: 90%、v2:10% のトラフィックを流すように変更してみましょう。
-v1 に 90%
-```bash
-gcloud run services update-traffic eats --to-revisions=${OLD_REV}=90
-```
-v2 に 10%
+
+v2 に 10% を流す設定を行います。この設定を行うことで、v1 へは自動的に 90% のリクエスト トラフィックが流れます。
 ```bash
 gcloud run services update-traffic eats --to-revisions=LATEST=10
 ```
