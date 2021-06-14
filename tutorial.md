@@ -765,7 +765,7 @@ Notification Client を実行中のタブに戻って、通知が届いている
 次のように表示されていれば、OK です。
 以下の例では、item_id が元々、2 だったものが、更新により 3 に変更され、通知内容にも反映されていることが分かるかと思います。
 ```terminal
-2021/06/13 17:10:47 {"event_name":"Order received","purchaser":"Taro Yamada","order_id":2,"item_id":3}
+2021/06/13 17:10:47 {"event_name":"Order updated","purchaser":"Taro Yamada","order_id":2,"item_id":3}
 ```
 
 <walkthrough-footnote>Notification サービスの動作確認を行いました。Eats サービスと連携し、注文作成及び、更新時に gRPC Server-side streaming を使って通知がクライアントに飛んでくることを確認しました。</walkthrough-footnote>
