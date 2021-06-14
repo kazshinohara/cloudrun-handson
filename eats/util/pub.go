@@ -12,7 +12,6 @@ import (
 
 var projectId = os.Getenv("PROJECT_ID")
 var topicId = os.Getenv("TOPIC_ID")
-//var subName = os.Getenv("SUB_ID")
 
 func Publish(eventName, purchaser string, orderId, itemId uint){
 	ctx := context.Background()

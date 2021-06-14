@@ -141,7 +141,7 @@ gcloud コマンドでは操作の対象とするプロジェクトの設定が�
 環境変数 `PROJECT_ID` に Google Cloud のプロジェクト ID を設定します。
 
 ```bash
-export PROJECT_ID="{{project-id}}"
+export PROJECT_ID={{project-id}}
 ```
 
 ### CLI（gcloud コマンド） から利用する Google Cloud のデフォルトプロジェクトを設定
