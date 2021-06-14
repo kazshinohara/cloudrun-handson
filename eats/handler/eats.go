@@ -2,7 +2,7 @@ package handler
 
 import (
 	"eats.com/model"
-	"eats.com/util"
+	//"eats.com/util"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -92,7 +92,7 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseBody)
 
 	// publish message to Cloud Pub/Sub
-	util.Publish("Order received", order.Purchaser, order.ID, order.ItemID)
+	//util.Publish("Order received", order.Purchaser, order.ID, order.ItemID)
 }
 
 func updateOrder(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func updateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseBody)
 
 	// TODO: only when item_completed_at or delivery_completed_at has been set
-	util.Publish("Order updated", order.Purchaser, order.ID, order.ItemID)
+	//util.Publish("Order received", order.Purchaser, order.ID, order.ItemID)
 }
 
 func deleteOrder(w http.ResponseWriter, r *http.Request) {
