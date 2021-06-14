@@ -6,16 +6,12 @@
 
 <walkthrough-project-setup></walkthrough-project-setup>
 
+<walkthrough-watcher-constant key="region" value="asia-northeast1"></walkthrough-watcher-constant>
 <walkthrough-watcher-constant key="db-instance-name" value="handson-db"></walkthrough-watcher-constant>
-
 <walkthrough-watcher-constant key="db-name" value="handson"></walkthrough-watcher-constant>
-
 <walkthrough-watcher-constant key="repo-name" value="handson"></walkthrough-watcher-constant>
-
 <walkthrough-watcher-constant key="topic-id" value="eats_events_topic"></walkthrough-watcher-constant>
-
 <walkthrough-watcher-constant key="sub-id" value="eats_events_sub"></walkthrough-watcher-constant>
-
 <walkthrough-watcher-constant key="schema-name" value="eats_events_schema"></walkthrough-watcher-constant>
 
 <!-- Step 1 -->
