@@ -1,12 +1,3 @@
-# Google Cloud Hands on materials for Cloud Run
-
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.png)](https://ssh.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/kazshinohara/cloudrun-handson&cloudshell_working_dir=/&cloudshell_tutorial=tutorial.md)
-
-**This is not an officially supported Google product**.
-
-See [tutorial.md](tutorial.md) for more details.
-
-If you want to manually launch the tutorial, please run the following command on your Cloud Shell.
-```terminal
-teachme tutorial.md
-```
+# This repository is deprecated. 
+As of 2021.06.25, this repo is deprecated.  
+The hands-on contents here has taken over by [GCP Hands on materials](https://github.com/GoogleCloudPlatform/gcp-getting-started-lab-jp/tree/master/cloudrun2).
